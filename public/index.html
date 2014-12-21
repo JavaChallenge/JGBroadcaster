@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title>SE</title>
+
+    <link rel="stylesheet" href="statics/lib/css/bootstrap.css">
+    <link rel="stylesheet" href="statics/lib/css/toastr.css">
+    <link rel="stylesheet" href="statics/app/css/style.css">
+
+    <script src="statics/lib/js/jquery.min.js"></script>
+    <script src="statics/lib/js/lodash.min.js"></script>
+    <script src="statics/lib/js/bootstrap.min.js"></script>
+    <script src="statics/lib/js/toastr.min.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="statics/lib/js/js-yaml.min.js"></script>
+</head>
+<body>
+<div class="container">
+    <div class="row">
+        <div class="col-md-6">
+            team1: <span class="label label-default" id="team1-point">0</span>
+            team2: <span class="label label-default" id="team2-point">0</span>
+            <br>
+            turn: <span class="label label-default" id="turn"></span>
+            <br>
+            view: <span class="label label-info" id="view"></span>
+
+            <div id="board"></div>
+        </div>
+        <div class="col-md-6">
+            <pre id="output"></pre>
+        </div>
+    </div>
+</div>
+<script>
+    var socket = io.connect();
+    var view = null;
+    socket.on('connect', function () {
+        console.log('connect');
+    });
+    socket.on('map', function (data) {
+        var $code = $('<code>').text('map:\n' + jsyaml.dump(data, null, 2));
+        $('#output').prepend($code).prepend('\n');
+    });
+    function join(oldView, view) {
+
+        if (view) {
+            socket.emit('leave', oldView, function (data) {
+                var $code = $('<code>').text('leave:\n' + jsyaml.dump(data, null, 2));
+                $('#output').prepend($code).prepend('\n');
+                $code = $('<code>').text('join to ' + view);
+                $('#output').prepend($code).prepend('\n');
+                socket.emit('join', view, function (data) {
+                    $('#view').text(view);
+                    var $code = $('<code>').text('join:\n' + jsyaml.dump(data, null, 2));
+                    $('#output').prepend($code).prepend('\n');
+                });
+            });
+        } else {
+            $code = $('<code>').text('join to ' + view);
+            $('#output').prepend($code).prepend('\n');
+            socket.emit('join', view, function (data) {
+                $('#view').text(view);
+                var $code = $('<code>').text('join:\n' + jsyaml.dump(data, null, 2));
+                $('#output').prepend($code).prepend('\n');
+            });
+        }
+    }
+    socket.on('info', function (data) {
+        if (data.views) {
+            var _view = view;
+            view = _(data.views).shuffle().first();
+            join(_view, view)
+        }
+        var $code = $('<code>').text('info:\n' + jsyaml.dump(data, null, 2));
+        $('#output').prepend($code).prepend('\n');
+    });
+    socket.on('diff', function (data) {
+        var $code = $('<code>').text('diff:\n' + jsyaml.dump(data, null, 2));
+        $('#output').prepend($code).prepend('\n');
+    });
+    var dynamics = {};
+    socket.on('turn', function (turn, data) {
+        $('#turn').text(turn);
+        _(data.transient).each(function (item) {
+            var div = $('<div>')
+                    .css('left', item.position.x * 10)
+                    .css('top', item.position.y * 10)
+                    .attr('data-obj', item.type)
+                    .appendTo('#board');
+            div.hide({
+                duration: item.duration * 1000,
+                done: function () {
+                    div.remove();
+                }
+            });
+
+        });
+        var di = _.indexBy(data.dynamic, 'id');
+        _(dynamics).each(function (item, id) {
+            if (di[id] == undefined) {
+                item.$.remove();
+            }
+        });
+        _(data.dynamic).each(function (item) {
+            if (dynamics[item.id] == undefined) {
+                dynamics[item.id] = _.cloneDeep(item);
+                dynamics[item.id].$ = $('<div>').appendTo('#board');
+            }
+            dynamics[item.id].$
+                    .css('left', item.position.x * 10)
+                    .css('top', item.position.y * 10)
+                    .attr('data-obj', item.type);
+        });
+        console.log(turn, data.static);
+        console.log(turn, data);
+    });
+    socket.on('msgs', function (msgs) {
+        _(msgs).each(function (msg) {
+            toastr[msg.type](msg.text);
+        });
+        var $code = $('<code>').text('msgs:\n' + jsyaml.dump(msgs, null, 2));
+        $('#output').prepend($code).prepend('\n');
+    });
+    socket.on('status', function (status) {
+        if (!(status.points && status.connections)) {
+            return;
+        }
+        var $code = $('<code>').text('status:\n' + jsyaml.dump(status, null, 2));
+        $('#output').prepend($code).prepend('\n');
+        $('#team1-point')
+                .text(status.points.team1)
+                .toggleClass('label-success', status.connections.team1)
+                .toggleClass('label-default', !status.connections.team1);
+        $('#team2-point')
+                .text(status.points.team2)
+                .toggleClass('label-success', status.connections.team2)
+                .toggleClass('label-default', !status.connections.team2);
+    });
+</script>
+</body>
+</html>

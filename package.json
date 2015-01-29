@@ -6,6 +6,7 @@
   "scripts": {
     "start": "DEBUG=JGF:* node index.js 127.0.0.1 7000",
     "start-server": "DEBUG=JGF:* node fakeServer/index.js",
+    "start-terminal-server": "DEBUG=JGF:* node fakeServer/index-terminal.js",
     "test": "echo \"Error: no test specified\" && exit 1",
     "less": "lessc private/less/style.less > public/statics/app/css/style.css"
   },

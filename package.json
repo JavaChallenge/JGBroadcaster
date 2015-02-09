@@ -16,6 +16,7 @@
     "debug": "^2.1.0",
     "eventsocket": "^1.0.4",
     "express": "^4.10.6",
+    "jsonsocket": "^1.0.2",
     "lodash": "^3.1.0",
     "socket.io": "^1.2.1"
   }

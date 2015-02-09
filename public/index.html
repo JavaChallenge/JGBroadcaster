@@ -66,6 +66,7 @@
         });
     }
 
+    var joined = {};
 
     socket.on('info', function (data) {
         var $views = $('#views');
@@ -73,14 +74,20 @@
         if (data.views) {
             view = data.views[0];
             _(data.views).each(function (view) {
-                var joind = false;
                 var $view = $('<span>')
-                        .addClass('label label-default')
+                        .addClass('label')
                         .text(view)
                         .appendTo($views);
+
+                if (joined[view]) {
+                    $view.addClass('label-info');
+                } else {
+                    $view.addClass('label-default');
+                }
+
                 $views.append(' ');
                 $view.on('click', function () {
-                    if (joind) {
+                    if (joined[view]) {
                         $view.removeClass('label-info')
                                 .addClass('label-default');
                     } else {
@@ -88,13 +95,13 @@
                                 .addClass('label-info');
                     }
 
-                    if (joind) {
+                    if (joined[view]) {
                         leave(view);
-                        joind = false;
+                        joined[view] = false;
                     }
                     else {
                         join(view);
-                        joind = true;
+                        joined[view] = true;
                     }
                 });
             });
@@ -108,7 +115,6 @@
     });
     var dynamics = {};
     socket.on('turn', function (turn, data) {
-        console.log(turn, data);
         $('#turn').text(turn);
         _(data.transient).each(function (item) {
             var div = $('<div>')
@@ -140,8 +146,8 @@
                     .css('top', item.position.y * 10)
                     .attr('data-obj', item.type);
         });
-        console.log(turn, data.static);
-        console.log(turn, data);
+        console.log(turn);
+        console.log(data.dynamic);
     });
     socket.on('msgs', function (msgs) {
         _(msgs).each(function (msg) {

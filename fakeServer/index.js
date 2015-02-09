@@ -1,6 +1,6 @@
 var _ = require('lodash');
 var net = require('net');
-var JsonSocket = require('../app/JsonSocket');
+var JsonSocket = require('jsonsocket');
 var log = require('debug')('JGF:server');
 var lastI = 0;
 

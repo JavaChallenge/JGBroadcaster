@@ -24,7 +24,10 @@
             <br>
             turn: <span class="label label-default" id="turn"></span>
             <br>
-            view: <span class="label label-info" id="view"></span>
+            game status: <span class="label label-default" id="game-status"></span>
+            <br>
+
+            <div id="views">views:</div>
 
             <div id="board"></div>
         </div>
@@ -43,35 +46,58 @@
         var $code = $('<code>').text('map:\n' + jsyaml.dump(data, null, 2));
         $('#output').prepend($code).prepend('\n');
     });
-    function join(oldView, view) {
 
-        if (view) {
-            socket.emit('leave', oldView, function (data) {
-                var $code = $('<code>').text('leave:\n' + jsyaml.dump(data, null, 2));
-                $('#output').prepend($code).prepend('\n');
-                $code = $('<code>').text('join to ' + view);
-                $('#output').prepend($code).prepend('\n');
-                socket.emit('join', view, function (data) {
-                    $('#view').text(view);
-                    var $code = $('<code>').text('join:\n' + jsyaml.dump(data, null, 2));
-                    $('#output').prepend($code).prepend('\n');
+    function leave(oldView) {
+        var $code = $('<code>').text('leaving ' + view);
+        $('#output').prepend($code).prepend('\n');
+        socket.emit('leave', oldView, function (data) {
+            var $code = $('<code>').text('leave:\n' + jsyaml.dump(data, null, 2));
+            $('#output').prepend($code).prepend('\n');
+        });
+    }
+
+    function join(view) {
+        var $code = $('<code>').text('join to ' + view);
+        $('#output').prepend($code).prepend('\n');
+        socket.emit('join', view, function (data) {
+            $('#view').text(view);
+            var $code = $('<code>').text('join:\n' + jsyaml.dump(data, null, 2));
+            $('#output').prepend($code).prepend('\n');
+        });
+    }
+
+
+    socket.on('info', function (data) {
+        var $views = $('#views');
+        $views.text('views: ');
+        if (data.views) {
+            view = data.views[0];
+            _(data.views).each(function (view) {
+                var joind = false;
+                var $view = $('<span>')
+                        .addClass('label label-default')
+                        .text(view)
+                        .appendTo($views);
+                $views.append(' ');
+                $view.on('click', function () {
+                    if (joind) {
+                        $view.removeClass('label-info')
+                                .addClass('label-default');
+                    } else {
+                        $view.removeClass('label-default')
+                                .addClass('label-info');
+                    }
+
+                    if (joind) {
+                        leave(view);
+                        joind = false;
+                    }
+                    else {
+                        join(view);
+                        joind = true;
+                    }
                 });
             });
-        } else {
-            $code = $('<code>').text('join to ' + view);
-            $('#output').prepend($code).prepend('\n');
-            socket.emit('join', view, function (data) {
-                $('#view').text(view);
-                var $code = $('<code>').text('join:\n' + jsyaml.dump(data, null, 2));
-                $('#output').prepend($code).prepend('\n');
-            });
-        }
-    }
-    socket.on('info', function (data) {
-        if (data.views) {
-            var _view = view;
-            view = _(data.views).shuffle().first();
-            join(_view, view)
         }
         var $code = $('<code>').text('info:\n' + jsyaml.dump(data, null, 2));
         $('#output').prepend($code).prepend('\n');
@@ -82,6 +108,7 @@
     });
     var dynamics = {};
     socket.on('turn', function (turn, data) {
+        console.log(turn, data);
         $('#turn').text(turn);
         _(data.transient).each(function (item) {
             var div = $('<div>')
@@ -120,15 +147,17 @@
         _(msgs).each(function (msg) {
             toastr[msg.type](msg.text);
         });
-        var $code = $('<code>').text('msgs:\n' + jsyaml.dump(msgs, null, 2));
+        var $code = $('<code>').addClass('text-muted').text('msgs:\n' + jsyaml.dump(msgs, null, 2));
         $('#output').prepend($code).prepend('\n');
     });
     socket.on('status', function (status) {
         if (!(status.points && status.connections)) {
             return;
         }
-        var $code = $('<code>').text('status:\n' + jsyaml.dump(status, null, 2));
+        var $code = $('<code>').addClass('text-muted').text('status:\n' + jsyaml.dump(status, null, 2));
         $('#output').prepend($code).prepend('\n');
+        $('#game-status')
+                .text(status.gameStatus);
         $('#team1-point')
                 .text(status.points.team1)
                 .toggleClass('label-success', status.connections.team1)

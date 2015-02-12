@@ -58,22 +58,22 @@ function Client(io, ip, port) {
                 var view = data.view;
                 log('view ' + view);
                 var outDiff = {
-                    static: [],
-                    dynamic: [],
-                    transient: []
+                    statics: [],
+                    dynamics: [],
+                    transients: []
                 };
                 if (diff[view] == undefined) {
                     diff[view] = {};
                 }
-                _(data.static)
+                _(data.statics)
                     .each(function (item) {
                         diff[view][item.id] = item;
-                        outDiff.static.push(item);
+                        outDiff.statics.push(item);
                     })
                     .value();
-                outDiff.static = data.static || [];
-                outDiff.dynamic = data.dynamic || [];
-                outDiff.transient = data.transient || [];
+                outDiff.statics = data.statics || [];
+                outDiff.dynamics = data.dynamics || [];
+                outDiff.transients = data.transients || [];
                 io.to(view).emit('turn', turn, outDiff);
             })
             .value();

@@ -84,15 +84,15 @@ var server = net.createServer(function (con) {
                 [
                     {
                         "view": "global",
-                        "static": []
+                        "statics": []
                     },
                     {
                         "view": "team1",
-                        "static": []
+                        "statics": []
                     },
                     {
                         "view": "team2",
-                        "static": []
+                        "statics": []
                     }
                 ]
             ]
@@ -162,27 +162,27 @@ var server = net.createServer(function (con) {
                 [
                     {
                         "view": "global",
-                        "static": [
+                        "statics": [
                             _.shuffle([[], [wall]])[0]
                         ],
-                        "dynamic": [
+                        "dynamics": [
                             obj
                         ],
-                        "transient": _.shuffle([[], [bomb]])[0]
+                        "transients": _.shuffle([[], [bomb]])[0]
                     },
                     {
                         "view": "team1",
-                        "static": _.shuffle([[], [wall]])[0],
-                        "dynamic": [
+                        "statics": _.shuffle([[], [wall]])[0],
+                        "dynamics": [
                             obj
                         ],
-                        "transient": _.shuffle([[], [], [bomb]])[0]
+                        "transients": _.shuffle([[], [], [bomb]])[0]
                     },
                     {
                         "view": "team2",
-                        "static": _.shuffle([[], [], [], [wall]])[0],
-                        "dynamic": d2,
-                        "transient": _.shuffle([[], [], [bomb]])[0]
+                        "statics": _.shuffle([[], [], [], [wall]])[0],
+                        "dynamics": d2,
+                        "transients": _.shuffle([[], [], [bomb]])[0]
                     }
                 ]
             ]

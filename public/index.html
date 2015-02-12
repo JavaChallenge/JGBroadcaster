@@ -116,7 +116,7 @@
     var dynamics = {};
     socket.on('turn', function (turn, data) {
         $('#turn').text(turn);
-        _(data.transient).each(function (item) {
+        _(data.transients).each(function (item) {
             var div = $('<div>')
                     .css('left', item.position.x * 10)
                     .css('top', item.position.y * 10)
@@ -130,13 +130,13 @@
             });
 
         });
-        var di = _.indexBy(data.dynamic, 'id');
+        var di = _.indexBy(data.dynamics, 'id');
         _(dynamics).each(function (item, id) {
             if (di[id] == undefined) {
                 item.$.remove();
             }
         });
-        _(data.dynamic).each(function (item) {
+        _(data.dynamics).each(function (item) {
             if (dynamics[item.id] == undefined) {
                 dynamics[item.id] = _.cloneDeep(item);
                 dynamics[item.id].$ = $('<div>').appendTo('#board');
@@ -144,10 +144,11 @@
             dynamics[item.id].$
                     .css('left', item.position.x * 10)
                     .css('top', item.position.y * 10)
-                    .attr('data-obj', item.type);
+                    .attr('data-obj', item.type)
+                    .appendTo('#board');
         });
         console.log(turn);
-        console.log(data.dynamic);
+        console.log(data.dynamics);
     });
     socket.on('msgs', function (msgs) {
         _(msgs).each(function (msg) {

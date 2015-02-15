@@ -39,8 +39,14 @@ function Client(io, ip, port) {
         _(info.views)
             .each(function (view) {
                 views[view] = true;
+            })
+            .value();
+
+        _(_diff)
+            .each(function (_diffView) {
+                var view = _diffView.view;
                 diff[view] = {};
-                _(_diff[view])
+                _(_diffView.statics)
                     .each(function (item) {
                         diff[view][item.id] = item;
                     })

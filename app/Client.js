@@ -14,14 +14,40 @@ function Client(io, ip, port) {
     log('connecting... %s:%s', ip, port);
 
     var socket = new EventSocket(port, ip);
+    var connected = false;
 
     socket.on('connect', function () {
+        connected = true;
         socket.emit('token', '00000000000000000000000000000000');
     });
 
+    var retry = null;
+    function retryConnect(){
+        if (retry === null) {
+            retry = setInterval(function () {
+                if (connected) {
+                    clearInterval(retry);
+                    retry = null;
+                    return;
+                }
+                log('try connect');
+                socket.connect(port, ip);
+            }, 1000);
+        }
+    }
+
     socket.on('disconnect', function () {
+        connected = false;
         log('disconnect');
+        retryConnect();
     });
+
+    socket.on('error', function () {
+        connected = false;
+        log('error', arguments);
+        retryConnect();
+    });
+
 
     socket.on('init', function (_info, _map, _diff) {
         info = _info || {};

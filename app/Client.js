@@ -2,7 +2,7 @@ var EventSocket = require('eventsocket');
 var _ = require('lodash');
 var log = require('debug')('JGF:client');
 
-function Client(io, ip, port) {
+function Client(io, ip, port, token) {
     var client = this;
     var info = {};
     var diff = {};
@@ -17,12 +17,14 @@ function Client(io, ip, port) {
     var connected = false;
 
     socket.on('connect', function () {
+        log('-- connect --');
         connected = true;
-        socket.emit('token', '00000000000000000000000000000000');
+        socket.emit('token', token);
     });
 
     var retry = null;
-    function retryConnect(){
+
+    function retryConnect() {
         if (retry === null) {
             retry = setInterval(function () {
                 if (connected) {
@@ -32,7 +34,7 @@ function Client(io, ip, port) {
                 }
                 log('try connect');
                 socket.connect(port, ip);
-            }, 1000);
+            }, 3000);
         }
     }
 
@@ -50,6 +52,7 @@ function Client(io, ip, port) {
 
 
     socket.on('init', function (_info, _map, _diff) {
+        log('-- init --');
         info = _info || {};
         turn = info.turn || -1;
         _diff = _diff || {};

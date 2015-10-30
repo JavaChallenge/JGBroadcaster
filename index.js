@@ -1,4 +1,4 @@
-function Broadcaster() {
+function Broadcaster(ip, port) {
     var broadcaster = this;
     var express = require('express');
     var app = express();
@@ -21,13 +21,13 @@ function Broadcaster() {
         server.listen(port);
     };
 
-    broadcaster.static = function(dir){
+    broadcaster.static = function (dir) {
         app.use(express.static(dir));
     };
 
-    broadcaster.run = function (serverId) {
+    broadcaster.run = function (serverId, token) {
         var channel = '/server' + serverId;
-        var client = new Client(io.of(channel), '127.0.0.1', 7900 + serverId);
+        var client = new Client(io.of(channel), ip, port + serverId, token);
         dio.run(function () {
             io
                 .of(channel)
@@ -40,6 +40,7 @@ function Broadcaster() {
                     socket.emit('status', client.getStatus());
 
                     socket.on('join', function (view, fn) {
+                        log('join', view);
                         fn = (typeof fn === 'function') ? fn : function () {
                         };
                         var views = client.getViews();
@@ -55,6 +56,7 @@ function Broadcaster() {
                     });
 
                     socket.on('leave', function (view, fn) {
+                        log('leave', view);
                         fn = (typeof fn === 'function') ? fn : function () {
                         };
                         if (socketViews[view]) {
@@ -67,6 +69,7 @@ function Broadcaster() {
                     });
                 });
         });
+        return client;
     }
 
 }
